@@ -21,7 +21,7 @@ Phillips eget Claude-operativsystem. To lag, ét repo:
 ```
 Genstart sessionen. Opdatér senere med `/plugin marketplace update papcsetup`.
 
-**3. Cowork / claude.ai:** kør `scripts/package.sh` og upload `dist/papc-core.zip` (og `dist/product-studio.zip`, der erstatter din nuværende upload) i Claudes plugin-indstillinger.
+**3. Cowork / claude.ai** (sådan er det sat op nu): Customize → Plugins → Add → Add marketplace → `phillippasqualato/PAPcSetup` med "Sync automatically" slået til. Tilføj derefter Papc core og Product studio under Discover. Nye commits på GitHub synkes selv. (Alternativ uden GitHub: `scripts/package.sh` + upload af zip-filerne.)
 
 **Kun én kanal pr. plugin.** Hvis product-studio både er uploadet og installeret fra marketplace i samme app, har du alt to gange. `/papc-doctor` fanger det.
 
