@@ -46,10 +46,25 @@ enabled_state() {
   else echo unknown; fi
 }
 
+stale=0
+synced_active() {
+  # Cowork/claude.ai sync: a plugin folder is active only if its server id is in
+  # the folder's manifest.json. Folders of switched-off plugins stay on disk as cache.
+  d="$1"; parent="$(dirname "$d")"
+  [ -f "$parent/manifest.json" ] || return 0
+  meta="$d.meta.json"
+  [ -f "$meta" ] || return 0
+  id="$(grep -oE '"server_plugin_id"[[:space:]]*:[[:space:]]*"[^"]*"' "$meta" | head -n 1 | sed -E 's/.*"([^"]*)"$/\1/')"
+  [ -z "$id" ] && return 0
+  grep -q "\"$id\"" "$parent/manifest.json"
+}
+
 for m in $manifests; do
   dir="$(dirname "$(dirname "$m")")"
-  name="$(sed -nE 's/.*"name"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/p' "$m" | head -n 1)"
+  # First "name" key in the file = the plugin's own name (author/owner names come later).
+  name="$(grep -oE '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$m" | head -n 1 | sed -E 's/.*"([^"]*)"$/\1/')"
   [ -z "$name" ] && continue
+  if ! synced_active "$dir"; then stale=$((stale+1)); continue; fi
   # Skip old cached versions: keep only the newest dir per plugin name+parent.
   echo "$name|$dir" >> "$names_file"
 done
@@ -94,6 +109,7 @@ for name in $(cut -d'|' -f1 "$names_file" | sort -u); do
   fi
 done
 
+[ "$stale" -gt 0 ] && say "" && say "($stale switched-off plugin folder(s) still cached on disk were ignored - they do not load.)"
 say ""
 say "## 2. Skill name collisions (same name in two plugins)"
 coll="$(cut -d'|' -f1 "$skills_file" | sort | uniq -d)"
