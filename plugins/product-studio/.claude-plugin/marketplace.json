@@ -1,0 +1,14 @@
+{
+  "name": "product-studio",
+  "owner": {
+    "name": "Phillip Pasqualato"
+  },
+  "plugins": [
+    {
+      "name": "product-studio",
+      "source": "./",
+      "description": "Conductor for no-coders building on Vercel + Supabase + GitHub: /start-project, /askmatt, /build-ticket, /harden and /ship over the best professional skills, agents and MCPs."
+    }
+  ],
+  "description": "product-studio: orchestrated professional skills, agents and MCPs for no-code product building on Vercel + Supabase + GitHub."
+}

@@ -1,0 +1,10 @@
+{
+  "name": "papc-core",
+  "version": "1.0.0",
+  "description": "PAPcSetup core that runs in every session (Claude Code and Cowork): one short rulebook, a navigation map to the right tool, cheap safety hooks (no --no-verify, no force-push to main, ask before loosening lint config), a context-size nudge to compact at phase boundaries, and a bounded, human-approved learning loop. Hooks are plain bash and never call a model. Harvested and simplified from affaan-m/ECC (MIT).",
+  "author": {
+    "name": "Phillip Pasqualato"
+  },
+  "license": "MIT",
+  "keywords": ["papc", "core", "rules", "navigation", "hooks", "learning", "ecc"]
+}

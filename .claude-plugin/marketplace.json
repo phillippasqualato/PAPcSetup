@@ -1,0 +1,24 @@
+{
+  "name": "papcsetup",
+  "owner": {
+    "name": "Phillip Pasqualato"
+  },
+  "metadata": {
+    "description": "PAPcSetup - Phillip's Claude operating system: papc-core runs everywhere, product-studio builds products.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "papc-core",
+      "source": "./plugins/papc-core",
+      "description": "Always-on core: rules, navigation, cheap guard hooks, context nudge and bounded learning. No LLM calls in hooks.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "product-studio",
+      "source": "./plugins/product-studio",
+      "description": "Build products on Vercel + Supabase + GitHub: /start-project, /askmatt, /build-ticket, /harden, /ship.",
+      "version": "0.8.1"
+    }
+  ]
+}

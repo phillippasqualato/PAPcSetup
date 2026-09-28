@@ -1,0 +1,22 @@
+# Areas (dimensions) of the audit loop
+
+Each area: a deterministic measure (pinned config in `measure/`), an independent judge, a default pass bar, and a round cap. `CONSTRAINTS.md` can only raise a bar, never lower it. Areas whose tool isn't set up show `IKKE MÅLT` with one install ticket.
+
+| Area (Danish label) | Deterministic measure (pinned) | Judge agent (independent) | Pass bar (default; CONSTRAINTS.md overrides upward only) | Max rounds |
+|---|---|---|---|---|
+| Tilgængelighed (a11y) | `@axe-core/playwright` tags `wcag2a,wcag2aa,wcag21aa,wcag22aa` on key routes × 3 roles × mobile/desktop × light/dark; LHCI accessibility | `e2e-explorer` with the `design:accessibility-review` checklist (if installed; otherwise WCAG 2.2 AA from `../../ui-design-fundamentals/`) (keyboard, focus order, SR names) → verifier | 0 serious/critical axe violations; LH a11y ≥ 95; 0 confirmed major | 3 |
+| Performance | LHCI mobile, `numberOfRuns=5`, median; `next build` route JS sizes; PSI/CrUX field data for prod when available | `web-performance-auditor` Deep mode (real numbers only) | LCP ≤ 2.5 s, CLS ≤ 0.1, TBT ≤ 200 ms, first-load JS ≤ 200 KB gz; noise band ±10% / ±150 ms | 3 |
+| Sikkerhed (app) | `semgrep scan --config p/default --error --metrics=off`, `gitleaks`, `trufflehog --results=verified`, `osv-scanner`, `npm audit --omit=dev`, security-header check; ZAP baseline on preview (CI) | `leak-hunter` + `security-and-hardening` checklist | 0 verified secrets, 0 Semgrep/osv ≥ high, headers per checklist; **any blocker → exit to /harden** | 2 |
+| Data og RLS | Supabase advisors (read-only MCP/CLI; splinter lints), `supabase db lint`, pgTAP via `db-tests` CI job | `supabase-security-reviewer` with the permission matrix | 0 ERROR advisors; every table has owner/other-tenant/anon pgTAP tests, all green | 2 |
+| Design (conformance) | `npx impeccable detect --json` raw (`--no-config`) and with config, on src and on the preview URL; hard-coded colour/spacing grep vs tokens; Playwright `toHaveScreenshot` diffs (CI Linux baselines) | impeccable `critique`/`audit` (read-only) + `e2e-explorer` vs DESIGN.md; L3 Codex via claudex-loop when available | 0 new detector hits vs baseline; 0 confirmed major DESIGN.md deviations | 2 (then taste → user) |
+| UX og flows | Playwright E2E suite green; console errors/failed requests on key routes = 0; loading/empty/error state present per `component-states.md` | `e2e-explorer` (3 roles) + `corner-case-hunter` | E2E green, 0 console errors, 0 confirmed major; LLM lenses converge (2 quiet passes, cap 3) | 2 |
+| Tekst og sprog (copy, Danish) | `placeholder-scan` (lorem, TODO in UI strings); `cspell` with `@cspell/dict-da-dk` on UI strings; `linkinator` on preview | `design:ux-copy` (if installed; otherwise a general subagent) against PRODUCT.md voice + glossary in CONTEXT.md | 0 placeholders, 0 unknown words (word-list growth counts as suppression), 0 dead links; 0 confirmed major | 2 |
+| SEO og deling | LHCI SEO category; per public route: unique `<title>`, meta description, OG/Twitter image, canonical, `lang="da"`; `sitemap.xml`/`robots.txt` present; Next `metadata` export check | general subagent with ship's SEO checklist (launch-readiness-auditor section) | LH SEO ≥ 95; 100% of public routes have the metadata set; no `noindex` on prod | 2 |
+| Kodekvalitet | `tsc --noEmit`, eslint 0 errors, unit tests, `next build`, `knip` (unused files/exports/deps), `placeholder-scan`, floor-guard | Matt `code-review` + `silent-failure-hunter` + `type-design-analyzer` (+ Codex L3) | gates green; knip/placeholder counts non-increasing (ratchet) and ≤ CONSTRAINTS.md target; 0 confirmed major | 2 |
+| Drift og fejl (weekly only) | Sentry unresolved issues / Vercel 5xx for last 7 days (connectors); `osv-scanner` new advisories; outdated majors | `observability-and-instrumentation` checklist; `toolchain-auditor` for drift | no new unresolved error group > N events; no known-exploited vuln in deps | 1 (tickets only) |
+
+Notes:
+- Measure over the same matrix every time: key routes from `PRODUCT.md` core jobs × roles (user A, user B in another organisation, logged out) × mobile 390px / desktop 1440px × light/dark.
+- Protected Vercel previews: use the protection-bypass header from a secret; never log it.
+- Noise: take the median of 5 Lighthouse runs; treat changes inside ±10% (or ±150 ms) as no change.
+- Taste (originality, delight) has no tool: judged once by impeccable `critique`, then the user decides; it never blocks green.

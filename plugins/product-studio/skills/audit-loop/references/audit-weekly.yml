@@ -1,0 +1,91 @@
+# .github/workflows/audit-weekly.yml  (template from product-studio audit-loop)
+# Weekly deterministic measurements against production and main. Never builds, merges or deploys.
+# Set repository variables: PROD_URL (e.g. https://example.com) and AUDIT_ROUTES (space-separated paths, e.g. "/ /pricing /login").
+name: audit-weekly
+on:
+  schedule:
+    - cron: "17 4 * * 1"   # Mondays 04:17 UTC
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  issues: write   # only to post the weekly numbers on the "Kvalitetstavle (ugentlig måling)" issue
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Code health
+        continue-on-error: true
+        run: |
+          mkdir -p audit-out
+          npx tsc --noEmit > audit-out/tsc.txt 2>&1; echo "tsc=$?" >> audit-out/exit-codes.txt
+          npx eslint . -f json -o audit-out/eslint.json; echo "eslint=$?" >> audit-out/exit-codes.txt
+          npx knip --reporter json > audit-out/knip.json; echo "knip=$?" >> audit-out/exit-codes.txt
+      - name: Lighthouse (production)
+        continue-on-error: true
+        run: |
+          URLS=""; for r in $AUDIT_ROUTES; do URLS="$URLS --collect.url=${PROD_URL}${r}"; done
+          npx @lhci/cli autorun --config=.github/audit/lighthouserc.json $URLS; echo "lhci=$?" >> audit-out/exit-codes.txt
+        env:
+          PROD_URL: ${{ vars.PROD_URL }}
+          AUDIT_ROUTES: ${{ vars.AUDIT_ROUTES }}
+      - name: Design detector
+        continue-on-error: true
+        run: npx impeccable detect --json src/ > audit-out/impeccable.json; echo "impeccable=$?" >> audit-out/exit-codes.txt
+      - name: Dependencies
+        continue-on-error: true
+        run: |
+          npm audit --omit=dev --json > audit-out/npm-audit.json; echo "npm_audit=$?" >> audit-out/exit-codes.txt
+      - uses: actions/upload-artifact@v4
+        with: { name: audit-measure, path: audit-out/, retention-days: 30 }
+  semgrep:
+    runs-on: ubuntu-latest
+    container: { image: semgrep/semgrep }
+    steps:
+      - uses: actions/checkout@v6
+      - run: mkdir -p audit-out && semgrep scan --config p/default --metrics=off --json -o audit-out/semgrep.json || true
+      - uses: actions/upload-artifact@v4
+        with: { name: audit-semgrep, path: audit-out/, retention-days: 30 }
+  report:
+    needs: [measure, semgrep]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: in }
+      - name: Summarise the numbers
+        shell: bash
+        run: |
+          node - <<'JS' > summary.md
+          const fs=require('fs'),p=require('path');
+          const read=(f)=>{try{return fs.readFileSync(f,'utf8')}catch{return null}};
+          const json=(f)=>{try{return JSON.parse(read(f))}catch{return null}};
+          const M='in/audit-measure', S='in/audit-semgrep', rows=[];
+          const codes=Object.fromEntries((read(M+'/exit-codes.txt')||'').trim().split('\n').filter(Boolean).map(l=>l.split('=')));
+          const eslint=json(M+'/eslint.json'); rows.push(['Kodekvalitet','tsc fejl-kode',codes.tsc??'ikke målt'],['Kodekvalitet','eslint fejl',eslint?eslint.reduce((n,f)=>n+f.errorCount,0):'ikke målt']);
+          const knip=json(M+'/knip.json'); rows.push(['Kodekvalitet','knip: ubrugte filer',knip&&knip.files?knip.files.length:'ikke målt']);
+          const man=json(M+'/lhci/manifest.json');
+          if(man){for(const r of man.filter(x=>x.isRepresentativeRun)){const s=r.summary||{};const u=r.url.replace(/^https?:\/\/[^/]+/,'')||'/';
+            rows.push(['Performance','LH performance '+u,Math.round((s.performance??0)*100)],['Tilgængelighed','LH a11y '+u,Math.round((s.accessibility??0)*100)],['SEO og deling','LH SEO '+u,Math.round((s.seo??0)*100)]);}}
+          else rows.push(['Performance / Tilgængelighed / SEO','Lighthouse','ikke målt']);
+          const imp=json(M+'/impeccable.json'); rows.push(['Design','impeccable detect fund',Array.isArray(imp)?imp.length:(imp&&imp.findings?imp.findings.length:'ikke målt')]);
+          const na=json(M+'/npm-audit.json'); const v=na&&na.metadata&&na.metadata.vulnerabilities; rows.push(['Sikkerhed (app)','npm audit high+critical',v?(v.high||0)+(v.critical||0):'ikke målt']);
+          const sg=json(S+'/semgrep.json'); rows.push(['Sikkerhed (app)','Semgrep ERROR-fund',sg?sg.results.filter(r=>r.extra&&r.extra.severity==='ERROR').length:'ikke målt']);
+          console.log('Ugentlig måling '+new Date().toISOString().slice(0,10)+' · main @ '+process.env.SHA.slice(0,7)+'\n\n| Område | Mål | Værdi |\n|---|---|---|\n'+rows.map(r=>'| '+r.join(' | ')+' |').join('\n')+'\n\n<!-- audit-weekly-json '+JSON.stringify(rows)+' -->');
+          JS
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+        env: { SHA: "${{ github.sha }}" }
+      - name: Post on the pinned issue
+        shell: bash
+        env: { GH_TOKEN: "${{ github.token }}", GH_REPO: "${{ github.repository }}" }
+        run: |
+          TITLE="Kvalitetstavle (ugentlig måling)"
+          N=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number --jq '.[0].number')
+          if [ -z "$N" ]; then N=$(gh issue create --title "$TITLE" --body "Her poster audit-weekly tallene hver mandag. Luk ikke denne issue." | grep -o '[0-9]*$'); fi
+          gh issue comment "$N" --body-file summary.md
+# Copy skills/audit-loop/references/measure/lighthouserc.json to .github/audit/lighthouserc.json once (the plugin's copy is canonical;
+# the audit loop compares the two and treats any loosening as a failed round). The db-tests job in ci.yml covers RLS.

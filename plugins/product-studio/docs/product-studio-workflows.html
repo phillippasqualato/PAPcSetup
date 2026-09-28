@@ -1,0 +1,492 @@
+<title>Product Studio Workflows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F4F6F8; --panel:#FFFFFF; --ink:#18202B; --ink-2:#4A5566; --ink-3:#7A8596;
+  --line:#DCE1E8; --line-2:#C8CFD9;
+  --start:#2E7D5B; --start-bg:#E6F3EC;
+  --iterate:#2958C8; --iterate-bg:#E8EEFB;
+  --harden:#B4361F; --harden-bg:#FBEBE7;
+  --ship:#6B40B8; --ship-bg:#F0EAFA;
+  --build:#0E7C86; --build-bg:#E2F3F4;
+  --agent-bg:#FFF5E0; --agent-ink:#8A5A00; --agent-line:#F0D49A;
+  --skill-bg:#EEF1F5; --skill-ink:#2D3848;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#11161D; --panel:#18202A; --ink:#E7ECF2; --ink-2:#B3BDCB; --ink-3:#8793A4;
+    --line:#2A3441; --line-2:#364253;
+    --start:#5BC197; --start-bg:#15302A; --iterate:#7FA2F5; --iterate-bg:#172440;
+    --harden:#F08A70; --harden-bg:#3A1C16; --ship:#B397EE; --ship-bg:#281D40; --build:#5CC6CE; --build-bg:#12302F;
+    --agent-bg:#33280F; --agent-ink:#F2C878; --agent-line:#5A4617;
+    --skill-bg:#222B37; --skill-ink:#D3DAE4;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#11161D; --panel:#18202A; --ink:#E7ECF2; --ink-2:#B3BDCB; --ink-3:#8793A4;
+  --line:#2A3441; --line-2:#364253;
+  --start:#5BC197; --start-bg:#15302A; --iterate:#7FA2F5; --iterate-bg:#172440;
+  --harden:#F08A70; --harden-bg:#3A1C16; --ship:#B397EE; --ship-bg:#281D40; --build:#5CC6CE; --build-bg:#12302F;
+  --agent-bg:#33280F; --agent-ink:#F2C878; --agent-line:#5A4617;
+  --skill-bg:#222B37; --skill-ink:#D3DAE4;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(28px,4vw,40px);font-weight:700;line-height:1.1}
+h2{font-size:22px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+.lead{color:var(--ink-2);max-width:66ch;font-size:16px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+code,.mono{font-family:var(--f-mono);font-size:13px}
+
+/* the loop */
+.loop{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.master{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:12px;background:var(--panel);border:1px solid var(--line);position:relative;transition:border-color .15s,transform .15s}
+.master:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.master:focus-visible{outline:2px solid var(--iterate);outline-offset:2px}
+.master[aria-selected="true"]{border-color:var(--c);box-shadow:0 0 0 1px var(--c) inset}
+.master .cmd{font-family:var(--f-mono);font-weight:500;font-size:15px;color:var(--c)}
+.master .when{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:600}
+.master .what{font-size:14px;color:var(--ink-2)}
+.master .arrow{position:absolute;right:-11px;top:50%;transform:translateY(-50%);color:var(--ink-3);font-size:14px;z-index:1}
+.m-start{--c:var(--start);--cbg:var(--start-bg)} .m-iterate{--c:var(--iterate);--cbg:var(--iterate-bg)}
+.m-harden{--c:var(--harden);--cbg:var(--harden-bg)} .m-ship{--c:var(--ship);--cbg:var(--ship-bg)} .m-build{--c:var(--build);--cbg:var(--build-bg)}
+.loopnote{font-size:13px;color:var(--ink-3)}
+
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:13px;color:var(--ink-2)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:12.5px;padding:3px 8px;border-radius:6px;background:var(--skill-bg);color:var(--skill-ink);border:1px solid transparent;white-space:nowrap;cursor:pointer}
+.chip.agent{background:var(--agent-bg);color:var(--agent-ink);border-color:var(--agent-line)}
+.chip.agent::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.ext{background:transparent;border-color:var(--line-2);color:var(--ink-2);white-space:normal;max-width:100%}
+.chip:hover{filter:brightness(.96)}
+.chip:focus-visible{outline:2px solid var(--iterate);outline-offset:1px}
+
+/* flow panel */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.panel-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between;margin-bottom:18px}
+.panel-head .cmd{font-family:var(--f-mono);font-size:20px;color:var(--c);font-weight:500}
+.panel-head .sum{color:var(--ink-2);max-width:62ch}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.step{display:grid;grid-template-columns:44px minmax(0,1fr);gap:0 14px;position:relative}
+.step .dot{width:30px;height:30px;border-radius:50%;background:var(--cbg);color:var(--c);display:grid;place-items:center;font-family:var(--f-mono);font-size:13px;font-weight:500;border:1.5px solid var(--c);margin-top:2px}
+.step::before{content:"";position:absolute;left:14.5px;top:34px;bottom:0;width:1.5px;background:var(--line-2)}
+.step:last-child::before{display:none}
+.step .body{padding-bottom:20px;display:flex;flex-direction:column;gap:6px}
+.step .title{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.step .title h3{font-size:16px}
+.gate{font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--cbg);color:var(--c)}
+.gate.bg{background:var(--skill-bg);color:var(--ink-2)}
+.step .desc{color:var(--ink-2);max-width:70ch}
+.step .chips{display:flex;flex-wrap:wrap;gap:6px}
+.step .out{font-size:13px;color:var(--ink-3)}
+.step .out b{color:var(--ink-2);font-weight:600}
+
+/* inspector */
+.inspect{position:sticky;bottom:12px;background:var(--panel);border:1px solid var(--line-2);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;box-shadow:0 6px 24px rgba(20,30,45,.10)}
+.inspect .name{font-family:var(--f-mono);font-weight:500}
+.inspect .kind{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);font-weight:600}
+.inspect .txt{color:var(--ink-2);font-size:14px}
+
+/* glossary */
+.gloss-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.search{font:inherit;padding:8px 12px;border-radius:8px;border:1px solid var(--line-2);background:var(--panel);color:var(--ink);min-width:0;width:260px;max-width:100%}
+.search:focus-visible{outline:2px solid var(--iterate);outline-offset:1px}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.fbtn{all:unset;cursor:pointer;font-size:13px;padding:5px 10px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2)}
+.fbtn[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.fbtn:focus-visible{outline:2px solid var(--iterate);outline-offset:1px}
+.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:14px}
+.gitem{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.gitem .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.gitem .nm{font-family:var(--f-mono);font-weight:500;font-size:13.5px;overflow-wrap:anywhere}
+.gitem .kd{font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;color:var(--ink-3);white-space:nowrap}
+.gitem.agent .kd{color:var(--agent-ink)}
+.gitem .ds{font-size:13.5px;color:var(--ink-2)}
+.gitem .src{font-size:12px;color:var(--ink-3)}
+.gitem .used{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:11px;font-family:var(--f-mono);padding:1px 6px;border-radius:4px;background:var(--cbg);color:var(--c)}
+.empty{color:var(--ink-3);padding:12px 0}
+
+.cheat{display:flex;flex-direction:column;gap:8px}
+.crow{display:grid;grid-template-columns:150px minmax(0,1fr) minmax(0,1.4fr);gap:6px 14px;align-items:baseline;padding:10px 12px;border-radius:10px;background:var(--cbg)}
+.crow .cmd{font-family:var(--f-mono);font-weight:500;color:var(--c)}
+.crow code{color:var(--ink-2);overflow-wrap:anywhere}
+@media (max-width:760px){.crow{grid-template-columns:1fr}}
+.guide{display:flex;flex-direction:column;gap:8px}
+.grow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,1.1fr);gap:4px 14px;padding:10px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:14px}
+.grow.hd{background:transparent;border:none;font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;color:var(--ink-3);padding-block:0}
+.grow .sit{font-weight:600}
+.grow code{color:var(--c,var(--ink));overflow-wrap:anywhere}
+.grow .hap,.grow .you{color:var(--ink-2)}
+.grow .lbl{display:none;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);font-weight:600}
+@media (max-width:760px){.grow{grid-template-columns:1fr}.grow.hd{display:none}.grow .lbl{display:block}}
+.faq{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.faq .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.faq .card p{color:var(--ink-2);font-size:14px}
+
+@media (max-width:900px){
+  .loop{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  .loop{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .master .arrow{display:none}
+  .panel{padding:16px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <div class="eyebrow">product-studio 0.8 · plugin</div>
+    <h1>Husk to kommandoer. Resten finder askmatt.</h1>
+    <p class="lead"><span class="mono">/start-project</span> til en ny idé, <span class="mono">/askmatt</span> til alt andet: beskriv hvad du vil, så finder den selv de rigtige skills, flows og agenter. De tre andre er genveje. Hver kommando kører de rigtige professionelle skills og agenter i en fast rækkefølge og stopper ved hver beslutning, der er din. Klik på en kommando for at se, hvad der sker under den, og klik på et navn for at se, hvad det gør.</p>
+  </header>
+
+  <section class="panel" aria-label="Husk-kort" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:baseline"><h2>Husk-kort</h2><span class="eyebrow">glemt navnene? skriv /studio</span></div>
+    <p class="mono" style="font-size:16px;color:var(--ink)"><span style="color:var(--start)">/start-project</span> <span style="color:var(--ink-3)">én gang</span> → <span style="color:var(--iterate)">/askmatt</span> <span style="color:var(--ink-3)">resten af tiden. Genveje:</span> <span style="color:var(--build)">/build-ticket</span> · <span style="color:var(--harden)">/harden</span> · <span style="color:var(--ship)">/ship</span> · <span style="color:var(--iterate)">/audit-loop</span> · <span style="color:var(--start)">/grill-design</span></p>
+    <div class="cheat">
+      <div class="crow m-start"><span class="cmd">/start-project</span><span><b>Husk.</b> Jeg har en ny idé</span><code>/start-project Jeg vil bygge en app hvor små klinikker kan booke og følge op på patienter</code></div>
+      <div class="crow m-iterate"><span class="cmd">/askmatt</span><span><b>Husk.</b> Alt andet. Alene = statusbriefing</span><code>/askmatt kortene ser billige ud, og filteret nulstilles</code></div>
+      <div class="crow m-build"><span class="cmd">/build-ticket</span><span>Genvej: byg en ticket (Code-fanen)</span><code>/build-ticket #4</code></div>
+      <div class="crow m-harden"><span class="cmd">/harden</span><span>Genvej: er det godt nok?</span><code>/harden #12</code></div>
+      <div class="crow m-iterate"><span class="cmd">/audit-loop</span><span>Genvej: gennemgå alt, i runder</span><code>/askmatt gennemgå alt</code></div>
+      <div class="crow m-start"><span class="cmd">/grill-design</span><span>Genvej: bestem designet ved at klikke</span><code>/askmatt grill mig på designet</code></div>
+      <div class="crow m-ship"><span class="cmd">/ship</span><span>Genvej: vi skal i luften</span><code>/ship vi skal lancere v1.0</code></div>
+    </div>
+    <p style="font-size:13px;color:var(--ink-3)">Hvor: /start-project og /ship starter bedst i Cowork · /askmatt virker begge steder · /build-ticket kun i Code-fanen · /harden giver sin fulde dom i Code-fanen. <span class="mono">/studio guide</span> viser hvad du skriver i hver situation. Du må gerne skrive på dansk uden kommando, f.eks. "gennemtest produktet" eller "vi skal lancere", så vælges den rigtige alligevel.</p>
+  </section>
+
+  <section aria-label="De fem kommandoer" style="display:flex;flex-direction:column;gap:10px">
+    <div class="loop" role="tablist" id="loop"></div>
+    <p class="loopnote">Et produkt går typisk fra venstre mod højre. <span class="mono">/askmatt</span>, <span class="mono">/build-ticket</span> og <span class="mono">/harden</span> kører i ring, hver gang noget ændres: bestem → byg → uafhængig dom → merge.</p>
+  </section>
+
+  <div class="legend" aria-label="Forklaring">
+    <span><span class="chip" tabindex="-1">skill</span> en opskrift, som AI'en følger</span>
+    <span><span class="chip agent" tabindex="-1">agent</span> en specialist, der arbejder i sin egen kontekst og rapporterer tilbage</span>
+    <span><span class="chip ext" tabindex="-1">plugin/værktøj</span> installeres ved siden af</span>
+  </div>
+
+  <section class="panel" id="panel" role="tabpanel" aria-live="polite"></section>
+
+  <div class="inspect" id="inspect">
+    <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+      <div class="kind" id="i-kind">Vælg et navn</div>
+      <div class="name" id="i-name">Klik på en skill eller agent ovenfor</div>
+      <div class="txt" id="i-txt">Så står det her, hvad den gør, og hvor den kommer fra.</div>
+    </div>
+  </div>
+
+  <section style="display:flex;flex-direction:column;gap:10px" aria-label="Situationsguide">
+    <div class="gloss-head"><h2>Hvad skriver jeg hvornår?</h2><span class="eyebrow">også i pluginnet: /studio guide</span></div>
+    <div class="guide">
+      <div class="grow hd"><span>Situation</span><span>Du skriver</span><span>Hvad der sker</span><span>Du gør</span></div>
+      <div class="grow m-start"><span class="lbl">Situation</span><span class="sit">Du har en ny idé</span><span class="lbl">Du skriver</span><code>/start-project &lt;idéen&gt;</code><span class="lbl">Hvad der sker</span><span class="hap">Grilling med anbefalede svar, så teknik, værktøjer, design og tickets</span><span class="lbl">Du gør</span><span class="you">Svar, skriv &quot;godkendt&quot; ved hver port, klik højst 5 opsætningstrin</span></div>
+      <div class="grow m-start"><span class="lbl">Situation</span><span class="sit">Idéen er stadig tåget</span><span class="lbl">Du skriver</span><code>/start-project … idéen er rå</code><span class="lbl">Hvad der sker</span><span class="hap">Variationer og en &quot;det gør vi ikke&quot;-liste først, så grilling</span><span class="lbl">Du gør</span><span class="you">Vælg retningen</span></div>
+      <div class="grow m-build"><span class="lbl">Situation</span><span class="sit">Planen er klar, der skal bygges</span><span class="lbl">Du skriver</span><code>/build-ticket #1</code><span class="lbl">Hvad der sker</span><span class="hap">Egen arbejdskopi, en plan på dansk til dig, test først, PR med &quot;Rulings I made&quot;</span><span class="lbl">Du gør</span><span class="you">Læs resuméet, skriv &quot;godkendt&quot;, åbn preview</span></div>
+      <div class="grow m-build"><span class="lbl">Situation</span><span class="sit">Næste ticket</span><span class="lbl">Du skriver</span><code>/build-ticket</code><span class="lbl">Hvad der sker</span><span class="hap">Finder næste ticket der ikke er blokeret</span><span class="lbl">Du gør</span><span class="you">Godkend planen</span></div>
+      <div class="grow m-iterate"><span class="lbl">Situation</span><span class="sit">Noget lille skal ændres</span><span class="lbl">Du skriver</span><code>/askmatt &lt;hvad&gt;</code><span class="lbl">Hvad der sker</span><span class="hap">Klassificerer (forsøg / lille / stor) og laver én lille ticket</span><span class="lbl">Du gør</span><span class="you">Godkend, byg med /build-ticket (ingen plan, går hurtigt)</span></div>
+      <div class="grow m-iterate"><span class="lbl">Situation</span><span class="sit">Stor ny funktion</span><span class="lbl">Du skriver</span><code>/askmatt &lt;funktionen&gt;</code><span class="lbl">Hvad der sker</span><span class="hap">Grilling, evt. prototype, spec og flere tickets</span><span class="lbl">Du gør</span><span class="you">Godkend spec, byg én ticket ad gangen</span></div>
+      <div class="grow m-iterate"><span class="lbl">Situation</span><span class="sit">Det ser forkert eller billigt ud</span><span class="lbl">Du skriver</span><code>/askmatt + skærmbillede</code><span class="lbl">Hvad der sker</span><span class="hap">Kigger på den live side, design-kritik og en mock</span><span class="lbl">Du gør</span><span class="you">Godkend mocken</span></div>
+      <div class="grow m-iterate"><span class="lbl">Situation</span><span class="sit">Noget er i stykker</span><span class="lbl">Du skriver</span><code>/askmatt &lt;hvad der sker&gt;</code><span class="lbl">Hvad der sker</span><span class="hap">Genskaber fejlen, finder årsagen, ticket med en test der beviser den</span><span class="lbl">Du gør</span><span class="you">Godkend, byg</span></div>
+      <div class="grow m-iterate"><span class="lbl">Situation</span><span class="sit">Det er langsomt</span><span class="lbl">Du skriver</span><code>/askmatt det er langsomt på &lt;side&gt;</code><span class="lbl">Hvad der sker</span><span class="hap">Måler rigtige tal, retter, måler igen</span><span class="lbl">Du gør</span><span class="you">Godkend ticket</span></div>
+      <div class="grow m-iterate"><span class="lbl">Situation</span><span class="sit">Omdøb eller fjern en kolonne/funktion</span><span class="lbl">Du skriver</span><code>/askmatt omdøb &lt;x&gt; til &lt;y&gt;</code><span class="lbl">Hvad der sker</span><span class="hap">Tre trin (udvid → flyt → fjern), så intet går i stykker</span><span class="lbl">Du gør</span><span class="you">Godkend tickets</span></div>
+      <div class="grow m-iterate"><span class="lbl">Situation</span><span class="sit">Ny service (betaling, e-mail, AI)</span><span class="lbl">Du skriver</span><code>/askmatt vi skal have &lt;service&gt;</code><span class="lbl">Hvad der sker</span><span class="hap">Produktspørgsmål, teknik, sikkerhed, værktøjer, tickets</span><span class="lbl">Du gør</span><span class="you">Svar på pris, moms, test-nøgler</span></div>
+      <div class="grow m-harden"><span class="lbl">Situation</span><span class="sit">En PR er klar</span><span class="lbl">Du skriver</span><code>/harden #&lt;PR&gt;</code><span class="lbl">Hvad der sker</span><span class="hap">8 trin og en uafhængig dom</span><span class="lbl">Du gør</span><span class="you">SHIP: merge · FIX-FIRST: indsæt fix-prompten · BLOCKED: læs hvorfor</span></div>
+      <div class="grow m-build"><span class="lbl">Situation</span><span class="sit">FIX-FIRST</span><span class="lbl">Du skriver</span><code>/build-ticket --fix #&lt;PR&gt;</code><span class="lbl">Hvad der sker</span><span class="hap">Tjekker hvert fund, retter med test først på samme PR</span><span class="lbl">Du gør</span><span class="you">Kør /harden igen (højst 2 runder)</span></div>
+      <div class="grow m-iterate"><span class="lbl">Situation</span><span class="sit">Hvor er vi?</span><span class="lbl">Du skriver</span><code>/askmatt</code><span class="lbl">Hvad der sker</span><span class="hap">Statusbriefing og de 3 bedste næste skridt</span><span class="lbl">Du gør</span><span class="you">Vælg ét</span></div>
+      <div class="grow m-ship"><span class="lbl">Situation</span><span class="sit">Vi skal lancere</span><span class="lbl">Du skriver</span><code>/ship vi lancerer v1.0</code><span class="lbl">Hvad der sker</span><span class="hap">Scope, oprydning, drifttjek, docs, sidste harden, release</span><span class="lbl">Du gør</span><span class="you">Klik din tjekliste, godkend go/no-go</span></div>
+      <div class="grow m-build"><span class="lbl">Situation</span><span class="sit">En bygning gik skævt</span><span class="lbl">Du skriver</span><code>/diagnosing-superpowers</code><span class="lbl">Hvad der sker</span><span class="hap">Læser sessionen og forklarer hvad der gik galt</span><span class="lbl">Du gør</span><span class="you">Beslut ændringen</span></div>
+      <div class="grow m-start"><span class="lbl">Situation</span><span class="sit">Glemt kommandoerne</span><span class="lbl">Du skriver</span><code>/studio</code><span class="lbl">Hvad der sker</span><span class="hap">Husk-kortet</span><span class="lbl">Du gør</span><span class="you">—</span></div>
+    </div>
+    <p style="font-size:13px;color:var(--ink-3)">Før planen er godkendt, spørger AI'en dig. Efter tager den selv de små beslutninger og skriver dem i PR'en. Den stopper kun ved fem ting: noget der ikke kan fortrydes, ny sikkerhed, noget uden for arbejdskopien (deploy, database), rent gætteri, eller noget der strider mod dine produkt- og designfiler.</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <div class="gloss-head">
+      <h2>Alle skills og agenter</h2>
+      <input class="search" id="q" type="search" placeholder="Søg, f.eks. design, RLS, test" aria-label="Søg i skills og agenter">
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="gloss" id="gloss"></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2>Kort fortalt</h2>
+    <div class="faq">
+      <div class="card"><h3>Hvorfor et plugin?</h3><p>Det er én pakke med alle 83 skills og 24 agenter. Du installerer den med ét klik, og så kan de kalde hinanden. Installerer du den også i Code-fanen, arbejder de to sider ens.</p></div>
+      <div class="card"><h3>Er det et workflow?</h3><p>Ja. Hver master-kommando er en dirigent: den bestemmer rækkefølgen, hvornår du skal godkende, og hvor tingene gemmes. Selve arbejdet udføres af de specialiserede skills og agenter under den.</p></div>
+      <div class="card"><h3>Hvor gemmes det hele?</h3><p>I dit GitHub-repo: <span class="mono">PRODUCT.md</span>, <span class="mono">CONTEXT.md</span>, <span class="mono">DESIGN.md</span>, <span class="mono">docs/</span>, <span class="mono">AGENTS.md</span> og <span class="mono">PLAN-REVIEW-LOG.md</span>. Cowork, Code-fanen, Codex og Obsidian læser de samme filer.</p></div>
+      <div class="card"><h3>Hvorfor Superpowers?</h3><p>Det er den stærkeste byggemotor: en frisk agent pr. opgave, test først, review efter hver opgave, og en liste over alle beslutninger. Matt Pococks skills planlægger, Superpowers bygger, /harden dømmer.</p></div>
+      <div class="card"><h3>Skifter du Claude-konto?</h3><p>Pluginnet er én fil, den flytter med. Denne side er bundet til kontoen: udgiv den igen fra HTML-filen. Samtaler flytter ikke med, men sandheden ligger i dit GitHub-repo. Opsætningslisten står i pluginnets README.</p></div>
+      <div class="card"><h3>Skal jeg have Docker?</h3><p>Nej. Supabase i skyen er din database. Testene af adgangsreglerne kører automatisk i GitHub på hver PR. Docker (eller OrbStack) er kun et valgfrit ekstra til hurtigere tests på din Mac.</p></div>
+      <div class="card"><h3>Hvad er Semgrep?</h3><p>En gratis robot, der læser koden efter kendte sikkerhedsfejl, hver gang der kommer en PR. "I CI" betyder bare: det kører automatisk i GitHub, ikke på din Mac. Du skal ikke gøre noget.</p></div>
+      <div class="card"><h3>Lange AI-kørsler?</h3><p>Et job, hvor flere AI-agenter arbejder på én gang, kører som et holdbart forløb (Vercel Workflow): i bølger, med budget-stop, uden dobbeltkørsler. Scorer regnes af koden, aldrig af modellen.</p></div>
+      <div class="card"><h3>Hvem godkender?</h3><p>Du godkender produkt, design og penge. Kode bliver godkendt af en uafhængig inspektør, aldrig af den der har bygget den. Med Codex er det en helt anden model.</p></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const MASTERS = [
+  {id:"start", cls:"m-start", cmd:"/start-project", when:"Du har en idé", what:"Definerer produkt, teknik, værktøjer og design, og gør det klar til at bygge.",
+   sum:"Et samlet forløb med dig, før der skrives en eneste linje kode. Fase 3 kører i baggrunden, mens I arbejder med design.",
+   steps:[
+    {t:"Placering og opgørelse", d:"Finder din projektmappe og dit repo og ser, hvilke værktøjer og forbindelser der findes. Tilbyder Anthropics engineering- og product-plugins, hvis de mangler.", c:["start-project"], x:["SearchPlugins","GitHub-connector"], o:"Et repo og en liste over forbindelser"},
+    {t:"Produkt", g:"du godkender", d:"Er idéen rå, kommer der først variationer og en \"det gør vi ikke\"-liste. Så bliver du grillet i runder, og hvert spørgsmål har et anbefalet svar. Uklare ord bliver til faste begreber. Fakta slås op i stedet for at spørge dig.", c:["define-product","idea-refine","grilling","domain-modeling","research","prototype","to-questionnaire"], x:["product-management:competitive-brief"], o:"PRODUCT.md, CONTEXT.md"},
+    {t:"Teknik", g:"du godkender", d:"AI'en er arkitekten: datamodel, adgangsregler, login og miljøer. Du bliver kun spurgt om ting med forretningsbetydning, som EU-hosting, login-metode og pris. En sikkerhedsagent tjekker designet, en trusselsmodel og en overvågningsplan skrives, og mønstrene tjekkes mod de nyeste docs.", c:["define-tech","background-jobs","supabase","supabase-postgres-best-practices","research","grilling","supabase-security-reviewer","security-and-hardening","observability-and-instrumentation","api-and-interface-design","source-driven-development"], x:["engineering:system-design","Next.js docs"], o:"docs/tech.md, ADR'er"},
+    {t:"Værktøjskæde", g:"baggrund", bg:true, d:"Finder det bedste plugin eller MCP til hver opgave, tegner hvordan data bevæger sig mellem GitHub, Vercel, Supabase og agenterne, og gennemgår 32 typer konflikter.", c:["define-toolchain","integration-scout","toolchain-auditor"], x:["SearchMcpRegistry","Context7"], o:"docs/toolchain.md, .mcp.json, .claude/settings.json, højst 5 klik til dig"},
+    {t:"Design", g:"du godkender", d:"Du bliver spurgt ind: fakta i ord, smag ved at klikke mellem små eksempler side om side, og du kan altid sige \"du bestemmer\". Først overfladetypen: hjemmeside, app eller dashboard. Derefter referencer, rigtige paletter og skrifttyper, 2-3 retninger du kan klikke i, og alle tilstande for knapper, kort, navigation, grafer og motion.", c:["define-design","grill-design","impeccable","anydesign","ui-ux-pro-max","ui-design-fundamentals","web-design-guidelines"], x:["design:accessibility-review","design:ux-copy","shadcn · Motion · Kokonut · Bklit · 21st"], o:"DESIGN.md, retningsside, component-states.md"},
+    {t:"Overdragelse", g:"du godkender", d:"Skriver reglerne til kodeagenten, laver spec og tickets som små, testbare skridt, samt en tjekliste over det, kun du kan gøre, og en færdig prompt til Code-fanen.", c:["build-handoff","setup-matt-pocock-skills","to-spec","to-tickets","constraint-driven-development","wizard"], o:"AGENTS.md, CONSTRAINTS.md (kvalitetsbaren), GitHub-issues, prompt til /build-ticket"},
+    {t:"Slut-audit", d:"Tjekker at filer, værktøjer og regler hænger sammen, og skærper instruktionsfilen.", c:["toolchain-auditor","claude-md-improver"], o:"Grønt lys til at bygge"}
+   ]},
+  {id:"askmatt", cls:"m-iterate", cmd:"/askmatt", when:"Der findes en version", what:"Alt andet: forstår hvad du vil, og starter de rigtige skills, flows og agenter.",
+   sum:"Virker i Cowork og i Code-fanen. Skriver du /askmatt alene, får du en statusbriefing. En lang ønskeliste bliver delt op i punkter, og hvert punkt får sin egen vej.",
+   steps:[
+    {t:"Indlæs og kig", d:"Læser projektets filer, åbne PR'er og den seneste dom. Hvis noget er synligt, kigger den på den live app, før den svarer.", c:["askmatt","code-explorer","visual-qa"], x:["ListPlugins","ListConnectors"], o:"Statusbriefing"},
+    {t:"Opdel og vælg vej", d:"Hvert punkt i din besked bliver klassificeret, f.eks. design, ny funktion, fejl, review, ny service eller værktøj, og som forsøg, lille eller stor ændring. Du ser tabellen én gang.", c:["askmatt"], o:"Punkt → vej → hvor det bygges"},
+    {t:"Skærp", g:"du godkender", d:"Spørger ind, hvor der er tvivl. Viser prototyper, når ord ikke rækker. Store, uklare opgaver bliver brudt op i beslutninger.", c:["grilling","domain-modeling","prototype","research","wayfinder","wait-what"], o:"En aftalt ændring"},
+    {t:"Opdatér sandheden", d:"Retter de filer, ændringen rører: produkt, teknik, design eller værktøjer.", c:["define-product","define-tech","define-design","define-toolchain","impeccable","anydesign","integration-scout"], o:"Opdaterede docs"},
+    {t:"Byg", d:"I Cowork: tickets og en prompt til Code-fanen. I Code-fanen: /build-ticket bygger hver ticket efter dit \"godkendt\" til planen.", c:["build-handoff","to-spec","to-tickets","build-ticket"], o:"En PR med preview"},
+    {t:"Særlige veje", d:"Fejl, noget der er langsomt, en kolonne der skal omdøbes, mange indkomne sager, en anden models mening, flytning af arbejde til et andet værktøj, merge-konflikter.", c:["audit-loop","grill-design","diagnosing-bugs","systematic-debugging","performance-optimization","web-performance-auditor","deprecation-and-migration","api-and-interface-design","triage","claudex-route","claudex-loop","handoff","resolving-merge-conflicts","improve-codebase-architecture","diagnosing-superpowers"], o:"Den rigtige specialist til opgaven"},
+    {t:"Dom", d:"Hver ændring bliver dømt uafhængigt, før den merges.", c:["harden"], o:"SHIP eller fejl-tickets"}
+   ]},
+  {id:"build", cls:"m-build", cmd:"/build-ticket", when:"En ticket skal bygges", what:"Code-fanen: arbejdskopi, en plan du godkender, test først, PR.",
+   sum:"Superpowers er motoren, product-studio dirigerer. Kun i Code-fanen. Små tickets springer planen over; store får en plan, du godkender på dansk. Bagefter tager den selv de små beslutninger og skriver dem i PR'en.",
+   steps:[
+    {t:"Læs og klassificér", d:"Læser AGENTS.md, ticket'en, spec'en og begreberne. Siger højt om det er en lille (bounded) eller planlagt ticket. I tvivl: planlagt.", c:["build-ticket"], o:"Klasse + grund"},
+    {t:"Arbejdskopi", d:"En separat worktree og gren fra den nyeste main, så intet andet bliver rørt. Tests skal være grønne, før der bygges.", c:["using-git-worktrees"], o:"feat/<n>-<slug>"},
+    {t:"Plan", g:"du godkender", d:"Kun planlagte tickets: en plan med præcise filer, tests og tjek, gennemgået af en agent. Du får 10 linjer på dansk og skriver \"godkendt\".", c:["writing-plans"], o:"docs/plans/…md"},
+    {t:"Byg, test først", d:"En frisk agent pr. opgave skriver en test der fejler, så koden, og en reviewer tjekker hver opgave. Database-regler testes med pgTAP. Uklarheder bliver til beslutninger i en log.", c:["subagent-driven-development","executing-plans","test-driven-development","verification-before-completion","next-dev-loop"], x:["Context7"], o:"Grøn kode + beslutningslog"},
+    {t:"PR", d:"Byggerens eget review (bevis, ikke dom). PR'en får \"Rulings I made\", udskudte småting og testoutput. Aldrig merge lokalt.", c:["requesting-code-review","finishing-a-development-branch"], o:"PR + preview-link"},
+    {t:"Dom og rettelser", g:"uafhængig", d:"/harden dømmer. Ved FIX-FIRST tjekkes hvert fund mod koden og rettes med test først på samme PR, højst 2 runder.", c:["harden","receiving-code-review"], o:"SHIP → merge på GitHub"}
+   ]},
+  {id:"harden", cls:"m-harden", cmd:"/harden", when:"Før merge eller go-live", what:"Brutal test med en uafhængig dom. Den der bygger, godkender aldrig.",
+   sum:"Rører aldrig koden. Måler, beviser, dømmer og logger, og sender rettelserne tilbage som tickets. Build- og databasetrin kræver Code-fanen.",
+   steps:[
+    {t:"Opsætning", d:"Vælger hvad der testes, kræver en ren arbejdsmappe og vælger uafhængighed: Codex (L3), en isoleret agent (L2) eller en separat session (L1).", c:["harden","claudex-loop","adversarial-inspector"], o:"Kørsels-id og niveau"},
+    {t:"Statiske tjek", g:"stopper ved fejl", d:"Build, typer, tests, lækkede nøgler i historikken, sårbare pakker, usikker kode, halvfærdig kode, og om nogen har svækket tests eller grænser.", c:["placeholder-scan","constraint-driven-development"], x:["gitleaks","trufflehog","osv-scanner","Semgrep","floor-guard","npm audit"], o:"PASS/FAIL med output"},
+    {t:"Database og RLS", g:"stopper ved fejl", d:"Det bevises med automatiske tests, at bruger B ikke kan se, ændre eller slette bruger A's data, og at en udlogget bruger intet ser. Supabases egne tjek køres også, og skema-ændringer tjekkes for at bryde kørende kode.", c:["supabase-security-reviewer","supabase","deprecation-and-migration"], x:["pgTAP","Supabase advisors"], o:"Testfiler + fund"},
+    {t:"Leaks", d:"Nøgler i kode og bundles, data der sendes ud til andre, persondata i fejl og logs, offentlige filer og manglende sikkerheds-headers.", c:["leak-hunter","security-and-hardening"], x:["claude-security"], o:"Fund med bevis"},
+    {t:"Corner cases", d:"Tegner hvilke valg der påvirker hvad, og finder \"valg X ødelægger Y\", samtidighed, dobbeltklik, grænser og halve fejl.", c:["corner-case-hunter"], x:["fast-check"], o:"Rangerede cases med test-skitser"},
+    {t:"Klik-test og design", d:"Alle knapper, hovers, formularer, roller, netværksfejl og to faner. Kort og grafer holdes op mod DESIGN.md på desktop og mobil.", c:["e2e-explorer","dogfood","ui-design-fundamentals"], x:["agent-browser","Playwright","axe"], o:"Rapport med screenshots"},
+    {t:"Uvildig inspektion", d:"En anden model eller en isoleret agent prøver at bevise, at ændringen er forkert, og dømmer hver af byggerens beslutninger. Review-agenter giver ekstra bevis.", c:["claudex-loop","adversarial-inspector","code-review","pr-code-reviewer","silent-failure-hunter","pr-test-analyzer","type-design-analyzer","impeccable"], o:"APPROVED / REVISE / BLOCKED"},
+    {t:"Dom og log", g:"blokerer merge", d:"Hvert fund prøves igen af en skeptiker. Dommen følger faste regler og skrives i loggen, og PR'en bliver markeret. En CI-check kan blokere merge uden SHIP.", c:["finding-verifier"], x:["PLAN-REVIEW-LOG.md","CI-gate"], o:"SHIP / FIX-FIRST / BLOCKED"},
+    {t:"Rettelser", d:"Fejl-tickets samlet efter årsag, hver med en test der skal skrives først, og en prompt til Code-fanen. Højst 2 runder, så går det til dig.", c:["build-handoff","build-ticket","receiving-code-review"], o:"Fejl-tickets + prompt"}
+   ]},
+  {id:"ship", cls:"m-ship", cmd:"/ship", when:"Produktet skal afsluttes", what:"Lukker scope, rydder op, tjekker alt til drift, skriver overdragelse og releaser.",
+   sum:"Det sidste workflow. Alt sker på en release-gren med én PR, og den endelige /harden kører først, når alle rettelser og docs er på plads. Trin 2 og 4-7 kører i Code-fanen.",
+   steps:[
+    {t:"Status", d:"Hvad er bygget i forhold til MVP'en i PRODUCT.md, hvad er åbent, og hvad var den seneste dom. Sætter et versionsnummer.", c:["ship"], o:"Et klart billede"},
+    {t:"Luk scope", g:"du godkender", d:"Hvert åbent punkt: nu, efter lancering, eller droppes. Det nødvendige bygges og dømmes først. Derefter oprettes release-grenen.", c:["grilling","build-handoff"], o:"En låst lanceringsliste"},
+    {t:"Oprydning", d:"Halvfærdig kode, testdata, død kode, forældede kommentarer, tekster og design på de vigtigste skærme.", c:["placeholder-scan","improve-codebase-architecture","code-simplifier","comment-analyzer","impeccable","build-ticket"], x:["design:ux-copy"], o:"Rettelser på release-grenen"},
+    {t:"Klar til drift", g:"kritiske punkter", d:"Domæne og SSL, login-URL'er, e-mail der ikke lander i spam, adskilt produktionsdatabase med backup, overvågning, fejlsporing, sikkerhed, SEO, GDPR, databehandleraftaler, rollback.", c:["launch-readiness-auditor","web-performance-auditor","performance-optimization","observability-and-instrumentation"], x:["launch-checklist"], o:"Agent-rettelser + din kliks-liste"},
+    {t:"Overdragelse", d:"README, runbook (deploy, rollback, nøgle-rotation, gendannelse af backup), changelog og opdaterede docs, så andre kan overtage.", c:["technical-doc-writer","claude-md-improver","toolchain-auditor"], o:"Dokumentation"},
+    {t:"Sidste harden", g:"skal være SHIP", d:"Hele test- og dom-flowet på den endelige kandidat: uafhængig dom (L2 eller L3), og alle seks trin skal have kørt. Kommer der et nyt commit bagefter, køres den igen.", c:["harden"], x:["claude-security"], o:"SHIP"},
+    {t:"Release", g:"du godkender", d:"Go/no-go, merge, versions-tag på main, test af hver kerne-opgave i produktion med to interne test-konti, overvågning tjekket, rollback klar.", c:["visual-qa"], x:["GitHub release","Vercel rollback"], o:"Produktet er live"},
+    {t:"Afslutning", d:"Log-PR, retrospektiv der forbedrer agenternes miljø, og en backlog til efter lanceringen.", c:["retro","diagnosing-superpowers","askmatt"], o:"Plan for uge 1"}
+   ]}
+];
+
+const AGENTS = new Set(["adversarial-inspector","code-architect","code-explorer","code-simplifier","comment-analyzer","corner-case-hunter","e2e-explorer","feature-code-reviewer","finding-verifier","impeccable-asset-producer","impeccable-documenter","impeccable-finish-reviewer","impeccable-manual-edit-applier","integration-scout","launch-readiness-auditor","leak-hunter","pr-code-reviewer","pr-test-analyzer","silent-failure-hunter","supabase-security-reviewer","technical-doc-writer","toolchain-auditor","type-design-analyzer","web-performance-auditor"]);
+
+const INFO = {
+ "start-project":["Master: starter et nyt projekt fra idé til klar-til-at-bygge.","product-studio"],
+ "askmatt":["Master: din ask-matt. Finder det rigtige værktøj til en ændring og kører det.","product-studio"],
+ "build-ticket":["Kommando: bygger én ticket i Code-fanen med Superpowers som motor: arbejdskopi, plan du godkender, test først, PR med beslutninger.","product-studio"],
+ "harden":["Master: brutal test og uafhængig dom før merge eller go-live.","product-studio"],
+ "ship":["Master: afslutter produktet og gør det klar til rigtige brugere.","product-studio"],
+ "define-product":["Fase: definerer hvad og hvorfor → PRODUCT.md og CONTEXT.md.","product-studio"],
+ "define-tech":["Fase: AI'en designer arkitekturen på Vercel, Supabase og GitHub.","product-studio"],
+ "define-toolchain":["Fase: vælger værktøjer, tegner dataflow og finder konflikter.","product-studio"],
+ "define-design":["Fase: finder og låser designretningen → DESIGN.md.","product-studio"],
+ "build-handoff":["Fase: gør repoet klar til at bygge. Spec, tickets og prompt til Code-fanen.","product-studio"],
+ "visual-qa":["Hurtig browser-test af én skærm, med screenshots.","product-studio"],
+ "placeholder-scan":["Finder halvfærdig kode: TODO, stubs, testdata og debug. 64 mønstre.","auto-orchestrate (MIT)"],
+ "grilling":["Interview i runder, hvor hvert spørgsmål har et anbefalet svar. Fakta slår den selv op.","Matt Pocock"],
+ "domain-modeling":["Låser begreber i CONTEXT.md og skriver ADR'er for svære valg.","Matt Pocock"],
+ "research":["En baggrundsagent læser officielle kilder og skriver en fil med kildehenvisninger.","Matt Pocock"],
+ "prototype":["Hurtig prototype, der besvarer ét spørgsmål (logik eller UI-varianter).","Matt Pocock"],
+ "to-questionnaire":["Skriver et spørgeskema til en anden person, der har svaret.","Matt Pocock"],
+ "to-spec":["Laver samtalen om til en spec.","Matt Pocock"],
+ "to-tickets":["Deler en spec op i små, testbare tickets med rækkefølge.","Matt Pocock"],
+ "setup-matt-pocock-skills":["Sætter repoet op én gang: issues, labels og docs.","Matt Pocock"],
+ "wizard":["Et script til de trin, kun et menneske kan tage.","Matt Pocock"],
+ "implement":["Alternativ: Matts lette bygge-flow (kun når du beder om det; /build-ticket er standard).","Matt Pocock"],
+ "tdd":["Opslag: Matts test-regler og mocking-guide (byggeriet bruger test-driven-development).","Matt Pocock"],
+ "code-review":["Review på to akser: følger den reglerne, og gør den det, spec'en bad om? Kører i /harden trin 6.","Matt Pocock"],
+ "diagnosing-bugs":["Til svære fejl. Kræver en test, der fejler, før der gættes.","Matt Pocock"],
+ "wayfinder":["Store, uklare opgaver bliver til beslutnings-tickets, én ad gangen.","Matt Pocock"],
+ "wait-what":["Forklarer det sidste svar igen, enkelt.","Matt Pocock"],
+ "triage":["Sorterer indkomne fejl og ønsker, så en agent kan tage dem.","Matt Pocock"],
+ "handoff":["Skriver en overdragelsesfil til et andet værktøj eller en anden person.","Matt Pocock"],
+ "resolving-merge-conflicts":["Løser merge-konflikter ud fra hensigt.","Matt Pocock"],
+ "improve-codebase-architecture":["Finder steder i koden, der gør fremtidige ændringer svære.","Matt Pocock"],
+"studio":["Husk-kortet: de 5 kommandoer, hvornår og eksempler. /studio guide: hvad du skriver i hver situation.","product-studio"],
+ "retro":["Retrospektiv: forbedringer til agenternes miljø.","Matt Pocock"],
+ "systematic-debugging":["Finder rodårsagen, før der rettes. Til almindelige fejl.","Superpowers"],
+ "verification-before-completion":["Bevis før påstand. Ingen \"færdig\" uden output.","Superpowers"],
+ "claudex-loop":["En anden model (Codex) gennemgår planen og inspicerer koden.","claudex-loop"],
+ "claudex-route":["Anbefaler, hvilken model der skal løse opgaven, eller giver en second opinion.","claudex-loop"],
+ "impeccable":["Det stærkeste design-skill: retning, DESIGN.md, critique, audit og polish.","impeccable (Apache)"],
+ "anydesign":["Analyserer en hjemmeside, et screenshot eller Figma og laver en design.md.","anydesign"],
+ "ui-ux-pro-max":["Opslag i paletter, skrifttype-par og UX-regler.","ui-ux-pro-max"],
+ "ui-design-fundamentals":["Håndværksregler for grid, farver, typografi, knapper, kort, navigation m.m.","claude-pipeline (MIT)"],
+ "web-design-guidelines":["UI-review mod Vercels fastlåste guidelines.","Vercel"],
+ "dogfood":["Udforskende bug-bash i en rigtig browser med bevis for hver fejl.","agent-browser (Apache)"],
+ "supabase":["Supabases officielle skill: auth, RLS, storage og klienter.","Supabase"],
+ "supabase-postgres-best-practices":["Postgres-regler: typer, indekser, RLS og migrations.","Supabase"],
+ "next-dev-loop":["Tjekker ændringer mens appen kører, ikke kun at koden kompilerer.","Next.js"],
+ "claude-md-improver":["Holder AGENTS.md og CLAUDE.md skarpe.","Anthropic"],
+ "adversarial-inspector":["Uvildig dommer: prøver at bevise, at ændringen er forkert.","product-studio"],
+ "corner-case-hunter":["Finder \"valg X ødelægger Y\" og laver test-skitser.","product-studio"],
+ "e2e-explorer":["Klikker alt igennem som flere roller og tjekker design mod DESIGN.md.","product-studio"],
+ "leak-hunter":["Jagter lækkede nøgler og data i kode, bundles, svar og logs.","product-studio"],
+ "finding-verifier":["Skeptikeren: prøver at modbevise hvert fund, før det tæller.","product-studio"],
+ "toolchain-auditor":["Finder konflikter mellem værktøjer, plugins, MCP'er og regler.","product-studio"],
+ "integration-scout":["Finder det bedste officielle plugin/MCP pr. opgave, sikkert opsat.","product-studio"],
+ "supabase-security-reviewer":["Tjekker RLS, adskillelse mellem kunder, nøgler og adgang i server-kode.","product-studio"],
+ "launch-readiness-auditor":["Go-live-tjek med bevis: drift, domæne, e-mail, backups, GDPR m.m.","product-studio"],
+ "technical-doc-writer":["Skriver README, runbook og arkitektur-docs.","claude-pipeline (MIT)"],
+ "code-explorer":["Følger hvordan en funktion virker gennem koden.","Anthropic"],
+ "code-architect":["Laver en byggeplan for en funktion i en stor kodebase.","Anthropic"],
+ "code-simplifier":["Forenkler kode, efter en funktion er landet.","Anthropic"],
+ "comment-analyzer":["Finder forældede og forkerte kommentarer.","Anthropic"],
+ "pr-code-reviewer":["Tjekker en PR mod AGENTS.md og efter fejl.","Anthropic"],
+ "silent-failure-hunter":["Finder fejl, der bliver slugt i stilhed, og dårlige fallbacks.","Anthropic"],
+ "pr-test-analyzer":["Finder huller i testdækningen.","Anthropic"],
+ "type-design-analyzer":["Vurderer TypeScript-typernes design.","Anthropic"],
+ "brainstorming":["Alternativ til grilling (kun når du beder om det). /askmatt låner dens opdeling: forsøg, lille, stor.","Superpowers"],
+ "writing-plans":["Skriver planen til én ticket: præcise filer, tests og tjek. Du godkender et dansk resumé.","Superpowers"],
+ "using-git-worktrees":["Laver en separat arbejdskopi og gren pr. ticket.","Superpowers"],
+ "subagent-driven-development":["Bygger planen med en frisk agent pr. opgave og review efter hver.","Superpowers"],
+ "executing-plans":["Bygger en lille plan selv, opgave for opgave, med tjek undervejs.","Superpowers"],
+ "test-driven-development":["Test først, altid: en test der fejler, så koden, så oprydning.","Superpowers"],
+ "requesting-code-review":["Byggerens eget review af grenen. Bevis, ikke en dom.","Superpowers"],
+ "receiving-code-review":["Tager imod fund: tjekker hvert mod koden, før der rettes.","Superpowers"],
+ "finishing-a-development-branch":["Afslutter grenen: alle tests grønne, push og PR. Aldrig merge lokalt.","Superpowers"],
+ "diagnosing-superpowers":["Læser en bygge-session, der gik skævt, og forklarer hvorfor.","Superpowers"],
+ "writing-skills":["Skriver og stress-tester en skill med agenter (kun når du beder om det).","Superpowers"],
+ "performance-optimization":["Gør det hurtigere: måler, retter, måler igen. Ingen gætterier.","Addy Osmani (MIT)"],
+ "web-performance-auditor":["Måler Core Web Vitals og Lighthouse med rigtige tal.","Addy Osmani (MIT)"],
+ "constraint-driven-development":["Skriver kvalitetsbaren i CONSTRAINTS.md og fanger, hvis nogen svækker tests eller grænser.","Addy Osmani (MIT)"],
+ "security-and-hardening":["Trusselsmodel og sikkerhed ud over RLS: misbrug, SSRF, AI-input, pakker.","Addy Osmani (MIT)"],
+ "observability-and-instrumentation":["Overvågning: fejlsporing, logs med id, alarmer der betyder noget.","Addy Osmani (MIT)"],
+ "deprecation-and-migration":["Omdøb eller fjern sikkert: udvid → flyt → fjern.","Addy Osmani (MIT)"],
+ "api-and-interface-design":["Stabile API'er og webhooks, der tåler gentagelser (idempotens).","Addy Osmani (MIT)"],
+ "source-driven-development":["Kode efter de nyeste officielle docs, med kilde.","Addy Osmani (MIT)"],
+ "background-jobs":["Opslag: sådan kører lange AI-forløb på Vercel + Supabase uden timeouts, dubletter eller løbske regninger.","product-studio"],
+ "grill-design":["Design-interview: du klikker mellem små eksempler side om side (knapper, kort, hover, grafer …) eller siger \"du bestemmer\". Alt logges i decisions.md.","product-studio"],
+ "audit-loop":["Løbende kvalitet: måler 10 områder med faste værktøjer, retter i runder og måler igen. Stopper ved faste regler. Kvalitetstavle og ugentlig kørsel.","product-studio"],
+ "idea-refine":["Skærper en rå idé: variationer, smertestillende eller vitamin, og hvad vi ikke gør.","Addy Osmani (MIT)"],
+ "feature-dev":["Alternativt 7-faset bygge-flow (kun når du beder om det).","Anthropic"],
+ "teach":["Lærer dig et begreb over flere sessioner.","Matt Pocock"],
+ "codebase-design":["Ordforråd for gode moduler: dybde, sømme, adaptere.","Matt Pocock"],
+ "shadcn":["shadcn/ui's officielle skill: komponenter, registries, temaer.","shadcn"],
+ "vercel-react-best-practices":["70 performance-regler til React og Next.js.","Vercel"],
+ "vercel-composition-patterns":["Komponent-mønstre, der skalerer.","Vercel"],
+ "playwright-skill":["Scripted browser-tests og screenshots.","lackeyjb (MIT)"],
+ "codex-review":["Codex gennemgår en plan (kun når du beder om det).","claudex-loop"],
+ "codex-build":["Codex bygger, Claude inspicerer (kun når du beder om det).","claudex-loop"],
+ "claude-automation-recommender":["Anbefaler hooks, agenter og MCP'er til en kodebase.","Anthropic"],
+ "writing-for-agents":["Stilguide til filer, som agenter skal læse.","Matt Pocock"],
+ "dispatching-parallel-agents":["Sender uafhængige opgaver til parallelle agenter.","Superpowers"]
+};
+
+const usedIn = {};
+MASTERS.forEach(m=>m.steps.forEach(s=>s.c.forEach(n=>{(usedIn[n]=usedIn[n]||new Set()).add(m.id)})));
+
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function chip(n){const a=AGENTS.has(n);return `<button type="button" class="chip${a?" agent":""}" data-n="${esc(n)}">${esc(n)}</button>`}
+function ext(n){return `<span class="chip ext">${esc(n)}</span>`}
+
+function renderLoop(active){
+  $("#loop").innerHTML = MASTERS.map((m,i)=>`
+    <button type="button" role="tab" class="master ${m.cls}" aria-selected="${m.id===active}" data-m="${m.id}" id="tab-${m.id}">
+      <span class="when">${esc(m.when)}</span>
+      <span class="cmd">${esc(m.cmd)}</span>
+      <span class="what">${esc(m.what)}</span>
+      ${i<MASTERS.length-1?'<span class="arrow" aria-hidden="true">→</span>':''}
+    </button>`).join("");
+}
+function renderPanel(id){
+  const m = MASTERS.find(x=>x.id===id);
+  const p = $("#panel"); p.className = "panel "+m.cls; p.setAttribute("aria-labelledby","tab-"+id);
+  p.innerHTML = `
+    <div class="panel-head"><div style="display:flex;flex-direction:column;gap:4px"><span class="cmd">${esc(m.cmd)}</span><p class="sum">${esc(m.sum)}</p></div><span class="eyebrow">${m.steps.length} trin</span></div>
+    <ol class="steps">${m.steps.map((s,i)=>`
+      <li class="step"><div class="dot">${i}</div><div class="body">
+        <div class="title"><h3>${esc(s.t)}</h3>${s.g?`<span class="gate${s.bg?" bg":""}">${esc(s.g)}</span>`:""}</div>
+        <p class="desc">${esc(s.d)}</p>
+        <div class="chips">${s.c.map(chip).join("")}${(s.x||[]).map(ext).join("")}</div>
+        ${s.o?`<p class="out"><b>Du får:</b> ${esc(s.o)}</p>`:""}
+      </div></li>`).join("")}</ol>`;
+}
+function select(id){
+  renderLoop(id); renderPanel(id);
+  try{localStorage.setItem("ps-master",id)}catch(e){}
+}
+function inspect(n){
+  const a = AGENTS.has(n); const i = INFO[n] || ["Se kataloget i pluginnet for detaljer.","product-studio"];
+  $("#i-kind").textContent = (a?"Agent":"Skill")+" · "+i[1];
+  $("#i-name").textContent = n;
+  $("#i-txt").textContent = i[0];
+}
+document.addEventListener("click",e=>{
+  const m=e.target.closest("[data-m]"); if(m){select(m.dataset.m);return}
+  const c=e.target.closest("[data-n]"); if(c){inspect(c.dataset.n)}
+});
+$("#loop").addEventListener("keydown",e=>{
+  if(!["ArrowRight","ArrowLeft"].includes(e.key))return;
+  const ids=MASTERS.map(m=>m.id); const cur=document.activeElement?.dataset?.m; if(!cur)return;
+  const next=ids[(ids.indexOf(cur)+(e.key==="ArrowRight"?1:ids.length-1))%ids.length];
+  select(next); document.getElementById("tab-"+next).focus();
+});
+
+// glossary
+let filt="all";
+const FILTERS=[["all","Alle"],["skill","Skills"],["agent","Agenter"],["start","/start-project"],["askmatt","/askmatt"],["build","/build-ticket"],["harden","/harden"],["ship","/ship"]];
+function renderFilters(){
+  $("#filters").innerHTML = FILTERS.map(([k,l])=>`<button type="button" class="fbtn" aria-pressed="${k===filt}" data-f="${k}">${l}</button>`).join("");
+}
+function renderGloss(){
+  const q=$("#q").value.trim().toLowerCase();
+  const names=Object.keys(INFO).sort((a,b)=>{
+    const pa=["start-project","askmatt","build-ticket","harden","ship"].indexOf(a), pb=["start-project","askmatt","build-ticket","harden","ship"].indexOf(b);
+    if(pa>-1||pb>-1) return (pa>-1?pa:99)-(pb>-1?pb:99);
+    return a.localeCompare(b);
+  });
+  const rows=names.filter(n=>{
+    const a=AGENTS.has(n), u=usedIn[n]||new Set();
+    if(filt==="skill"&&a)return false; if(filt==="agent"&&!a)return false;
+    if(["start","askmatt","build","harden","ship"].includes(filt)&&!u.has(filt))return false;
+    return !q || n.includes(q) || INFO[n][0].toLowerCase().includes(q) || INFO[n][1].toLowerCase().includes(q);
+  });
+  const clsOf={start:"m-start",askmatt:"m-iterate",build:"m-build",harden:"m-harden",ship:"m-ship"};
+  const cmdOf={start:"/start-project",askmatt:"/askmatt",build:"/build-ticket",harden:"/harden",ship:"/ship"};
+  $("#gloss").innerHTML = rows.length? rows.map(n=>{
+    const a=AGENTS.has(n); const u=[...(usedIn[n]||[])];
+    return `<div class="gitem${a?" agent":""}"><div class="top"><span class="nm">${esc(n)}</span><span class="kd">${a?"Agent":"Skill"}</span></div>
+      <p class="ds">${esc(INFO[n][0])}</p>
+      <div class="used">${u.map(x=>`<span class="tag ${clsOf[x]}">${cmdOf[x]}</span>`).join("")}</div>
+      <p class="src">${esc(INFO[n][1])}</p></div>`}).join("") : `<p class="empty">Ingen match. Prøv et andet ord.</p>`;
+}
+$("#filters").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(!b)return;filt=b.dataset.f;renderFilters();renderGloss()});
+$("#q").addEventListener("input",renderGloss);
+
+let start="start"; try{start=localStorage.getItem("ps-master")||"start"}catch(e){}
+if(!MASTERS.some(m=>m.id===start))start="start";
+select(start); renderFilters(); renderGloss(); inspect("harden");
+</script>

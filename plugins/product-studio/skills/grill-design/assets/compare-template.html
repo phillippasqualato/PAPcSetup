@@ -1,0 +1,105 @@
+<title>Vælg designet</title>
+<!--
+grill-design comparison page. Fill ONLY the CONFIG block below; keep the rest unchanged.
+Each row = one question. Each candidate = a set of CSS variables. The same markup renders under
+every candidate, so the comparison is fair and hover/focus/press are live.
+kinds: buttons, card, nav, chart, table, state, type, form, surface, motion, palette, copy, custom
+Variables a candidate may set (unset ones fall back to BASE):
+  --bg --surface --text --muted --border --accent --accent-ink --good --bad
+  --radius --shadow --pad --gap --font-head --font-body --weight-head --motion --hover-lift
+Content comes from PRODUCT.md (real words), never lorem ipsum.
+-->
+<script id="CONFIG" type="application/json">
+{
+  "title": "Runde 1: knapper og kort",
+  "intro": "Klik rundt, hold musen over tingene, og vælg det du bedst kan lide. Du kan også sige 'du bestemmer'.",
+  "fonts": ["Inter:wght@400;600;700"],
+  "base": {"--bg":"#F6F7F9","--surface":"#FFFFFF","--text":"#16181D","--muted":"#5B6270","--border":"#DDE1E7","--accent":"#2F5BD3","--accent-ink":"#FFFFFF","--good":"#1F8A5B","--bad":"#C2412D","--radius":"10px","--shadow":"0 1px 2px rgba(0,0,0,.06)","--pad":"16px","--gap":"12px","--font-head":"Inter, system-ui, sans-serif","--font-body":"Inter, system-ui, sans-serif","--weight-head":"650","--motion":"160ms","--hover-lift":"0px"},
+  "content": {"product":"Eksempel ApS","item":"Ordre #1042","meta":"Oprettet i dag · 3 varer","value":"1.234,50 kr.","cta":"Gem ændringer","secondary":"Annullér","nav":["Oversigt","Ordrer","Kunder","Indstillinger"],"series":[4,7,5,9,6,8],"labels":["Jan","Feb","Mar","Apr","Maj","Jun"],"empty":"Ingen ordrer endnu","emptyHint":"Opret din første ordre, så dukker den op her.","error":"Vi kunne ikke gemme ordren","errorHint":"Tjek forbindelsen og prøv igen."},
+  "rows": [
+    {"id":"6.1","kind":"buttons","question":"Hvilke knapper?","candidates":[
+      {"key":"A","caption":"Bløde hjørner, fyldt","vars":{"--radius":"10px"}},
+      {"key":"B","caption":"Skarpe hjørner, markant","vars":{"--radius":"3px","--weight-head":"700"}},
+      {"key":"C","caption":"Pille-form, luftig","vars":{"--radius":"999px","--pad":"20px"}}]},
+    {"id":"6.2","kind":"card","question":"Hvordan skal et kort reagere, når du holder musen over det?","candidates":[
+      {"key":"A","caption":"Kanten bliver tydeligere","vars":{"--hover-lift":"0px"}},
+      {"key":"B","caption":"Løfter sig med skygge","vars":{"--hover-lift":"-3px","--shadow":"0 6px 18px rgba(0,0,0,.10)"}}]}
+  ]
+}
+</script>
+<style>
+:root{--ui-bg:#EEF0F3;--ui-panel:#FFFFFF;--ui-ink:#171A20;--ui-ink-2:#5A6170;--ui-line:#D9DDE4;--ui-focus:#2F5BD3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ui-bg:#101318;--ui-panel:#171B22;--ui-ink:#E8EBF0;--ui-ink-2:#A7AFBC;--ui-line:#2A313C}}
+:root[data-theme="dark"]{--ui-bg:#101318;--ui-panel:#171B22;--ui-ink:#E8EBF0;--ui-ink-2:#A7AFBC;--ui-line:#2A313C}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ui-bg);color:var(--ui-ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px 16px 64px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1{font-size:26px;margin:0} .intro{color:var(--ui-ink-2);margin:4px 0 0;max-width:70ch}
+.row{background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:14px;padding:18px}
+.row h2{font-size:17px;margin:0 0 12px;display:flex;gap:10px;align-items:baseline}
+.row h2 .num{font:600 12px ui-monospace,Menlo,monospace;color:var(--ui-ink-2)}
+.cands{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.cand{border:1px solid var(--ui-line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.cand .label{display:flex;gap:8px;align-items:baseline;padding:8px 12px;border-bottom:1px solid var(--ui-line);font-size:13px;color:var(--ui-ink-2)}
+.cand .label b{font:700 14px ui-monospace,Menlo,monospace;color:var(--ui-ink)}
+.stage{background:var(--bg);color:var(--text);font-family:var(--font-body);padding:18px;min-height:150px;display:flex;flex-direction:column;gap:var(--gap);justify-content:center}
+.stage h3,.stage .h{font-family:var(--font-head);font-weight:var(--weight-head);margin:0}
+.btn{appearance:none;border:1px solid transparent;border-radius:var(--radius);padding:calc(var(--pad)*.6) var(--pad);font:inherit;font-weight:600;cursor:pointer;transition:transform var(--motion),background var(--motion),box-shadow var(--motion),border-color var(--motion)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)} .btn.primary:hover{filter:brightness(1.08)}
+.btn.secondary{background:var(--surface);color:var(--text);border-color:var(--border)} .btn.secondary:hover{border-color:var(--text)}
+.btn.ghost{background:transparent;color:var(--accent)} .btn.ghost:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.btn:active{transform:scale(.97)} .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:var(--pad);box-shadow:none;transition:transform var(--motion),box-shadow var(--motion),border-color var(--motion);cursor:pointer}
+.card:hover,.card:focus-visible{transform:translateY(var(--hover-lift));box-shadow:var(--shadow);border-color:color-mix(in srgb,var(--text) 35%,var(--border))}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card .meta{color:var(--muted);font-size:13px} .card .val{font-variant-numeric:tabular-nums;font-weight:700;margin-top:6px}
+.nav{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px}
+.nav a{padding:6px 10px;border-radius:calc(var(--radius) - 2px);color:var(--muted);text-decoration:none;font-size:14px;transition:background var(--motion),color var(--motion)}
+.nav a:hover{color:var(--text)} .nav a:focus-visible{outline:2px solid var(--accent);outline-offset:1px} .nav a.on{background:var(--accent);color:var(--accent-ink)}
+.chart svg{width:100%;height:120px;display:block} .chart .bar{fill:var(--accent);transition:opacity var(--motion)} .chart .bar:hover{opacity:.75}
+.chart .grid{stroke:var(--border)} .chart text{fill:var(--muted);font-size:10px}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums} th{text-align:left;color:var(--muted);font-weight:600}
+td,th{padding:calc(var(--pad)*.45) 8px;border-bottom:1px solid var(--border)} tr:hover td{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.state{background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);padding:var(--pad);text-align:center}
+.state.err{border-style:solid;border-color:color-mix(in srgb,var(--bad) 45%,var(--border))} .state .h{font-size:15px} .state p{color:var(--muted);margin:4px 0 10px;font-size:14px}
+.field{display:flex;flex-direction:column;gap:4px} .field input{font:inherit;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text)}
+.field input:focus{outline:2px solid var(--accent);outline-offset:1px} .field .hint{color:var(--bad);font-size:13px}
+.swatches{display:flex;gap:6px} .sw{flex:1;height:44px;border-radius:var(--radius);border:1px solid var(--border)}
+.pulse{width:100%;height:10px;border-radius:var(--radius);background:var(--border);overflow:hidden}
+.pulse i{display:block;height:100%;width:35%;background:var(--accent);border-radius:inherit;animation:slide calc(var(--motion)*8) ease-in-out infinite alternate}
+@keyframes slide{to{transform:translateX(185%)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.foot{color:var(--ui-ink-2);font-size:13px}
+</style>
+<div class="wrap">
+  <header><h1 id="t"></h1><p class="intro" id="i"></p></header>
+  <div id="rows" style="display:flex;flex-direction:column;gap:16px"></div>
+  <p class="foot">Svar i chatten, fx <b>1A, 2B</b>, eller skriv <b>du bestemmer</b> ved en række, en sektion eller resten.</p>
+</div>
+<script>
+(function(){
+const C=JSON.parse(document.getElementById('CONFIG').textContent);
+if(C.fonts&&C.fonts.length){const l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?'+C.fonts.map(f=>'family='+f.replace(/ /g,'+')).join('&')+'&display=swap';document.head.appendChild(l)}
+const k=C.content||{}; let uid=0; const e=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const R={
+ buttons:()=>`<div class="btnrow"><button class="btn primary">${e(k.cta)}</button><button class="btn secondary">${e(k.secondary)}</button><button class="btn ghost">Mere</button></div>`,
+ card:()=>`<div class="card" tabindex="0"><h3>${e(k.item)}</h3><div class="meta">${e(k.meta)}</div><div class="val">${e(k.value)}</div></div>`,
+ nav:()=>`<nav class="nav">${(k.nav||[]).map((n,i)=>`<a href="#" class="${i===0?'on':''}" onclick="return false">${e(n)}</a>`).join('')}</nav>`,
+ chart:()=>{const s=(k.series&&k.series.length)?k.series:[1],m=Math.max(...s,1),w=100/s.length;return `<div class="chart"><svg viewBox="0 0 100 60" preserveAspectRatio="none" role="img" aria-label="Søjlediagram">${[15,30,45].map(y=>`<line class="grid" x1="0" x2="100" y1="${y}" y2="${y}" stroke-width=".3"/>`).join('')}${s.map((v,i)=>`<rect class="bar" x="${i*w+w*.18}" width="${w*.64}" y="${55-v/m*50}" height="${v/m*50}" rx="1"/>`).join('')}</svg><div style="display:flex;justify-content:space-between;color:var(--muted);font-size:11px">${(k.labels||[]).map(l=>`<span>${e(l)}</span>`).join('')}</div></div>`},
+ table:()=>`<table><thead><tr><th>Navn</th><th>Status</th><th style="text-align:right">Beløb</th></tr></thead><tbody>${[1,2,3,4].map(i=>`<tr><td>${e(k.item)}-${i}</td><td>${i%2?'Aktiv':'Afventer'}</td><td style="text-align:right">${e(k.value)}</td></tr>`).join('')}</tbody></table>`,
+ state:()=>`<div class="state"><div class="h">${e(k.empty)}</div><p>${e(k.emptyHint)}</p><button class="btn primary">${e(k.cta)}</button></div><div class="state err"><div class="h">${e(k.error)}</div><p>${e(k.errorHint)}</p><button class="btn secondary">Prøv igen</button></div>`,
+ type:()=>`<div class="h" style="font-size:26px;line-height:1.15">${e(k.product)}</div><p style="margin:0;color:var(--muted)">${e(k.meta)}. ${e(k.emptyHint)}</p>`,
+ form:()=>{const id='h'+(++uid);return `<label class="field">E-mail<input value="navn@" aria-invalid="true" aria-describedby="${id}"><span class="hint" id="${id}">Skriv en gyldig e-mailadresse</span></label><button class="btn primary">${e(k.cta)}</button>`},
+ surface:()=>`<div class="card"><h3>${e(k.item)}</h3><div class="meta">${e(k.meta)}</div></div><div class="card"><h3>${e(k.product)}</h3><div class="meta">${e(k.value)}</div></div>`,
+ motion:()=>`<div class="pulse"><i></i></div><div class="btnrow"><button class="btn primary">${e(k.cta)}</button></div>`,
+ palette:()=>`<div class="swatches" role="img" aria-label="Farvepalet">${['--bg','--surface','--border','--muted','--text','--accent','--good','--bad'].map(v=>`<div class="sw" style="background:var(${v})" title="${v}"></div>`).join('')}</div>`,
+ copy:(c)=>`<div class="state"><div class="h">${e(c.title||k.empty)}</div><p>${e(c.text||k.emptyHint)}</p></div>`,
+ custom:(c)=>c.html||''
+};
+document.getElementById('t').textContent=C.title||'Vælg designet';
+document.getElementById('i').textContent=C.intro||'';
+const base=C.base||{};
+document.getElementById('rows').innerHTML=(C.rows||[]).map((r,ri)=>`<section class="row"><h2><span class="num">${ri+1} · ${e(r.id||'')}</span>${e(r.question)}</h2><div class="cands">${r.candidates.map(c=>{const v=Object.assign({},base,c.vars||{});const st=Object.entries(v).map(([a,b])=>a+':'+b).join(';');return `<div class="cand"><div class="label"><b>${e(c.key)}</b>${e(c.caption||'')}</div><div class="stage" style="${e(st)}">${(R[r.kind]||R.custom)(c)}</div></div>`}).join('')}</div></section>`).join('');
+})();
+</script>

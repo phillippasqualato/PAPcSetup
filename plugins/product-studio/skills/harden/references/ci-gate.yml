@@ -1,0 +1,51 @@
+# .github/workflows/harden-gate.yml
+# Required status check: a PR can only merge (and so reach production via Vercel) when
+# PLAN-REVIEW-LOG.md on the PR branch contains a SHIP entry for the PR's head commit.
+# The harden run appends that entry and pushes it as the PR's last commit, so the gate
+# accepts a SHIP entry for the head SHA or for its parent when the head commit only touched
+# PLAN-REVIEW-LOG.md / harden/. docs/log.md and audit-loop's docs/audit/SCOREBOARD.md + docs/audit/history.jsonl
+# also count as log-only (no code to judge).
+name: harden-gate
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Check for a SHIP verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          HEAD_SHA=$(git rev-parse HEAD)
+          SHORT_HEAD=${HEAD_SHA:0:7}
+          PARENT_SHA=$(git rev-parse HEAD~1)
+          SHORT_PARENT=${PARENT_SHA:0:7}
+          test -f PLAN-REVIEW-LOG.md || { echo "No PLAN-REVIEW-LOG.md: run /harden"; exit 1; }
+          # A PR that touches only the log (e.g. ship's chore/ship-vX.Y.Z) carries no code: pass.
+          PR_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }}...HEAD)
+          PR_LOG_ONLY=true
+          for f in $PR_FILES; do
+            case "$f" in PLAN-REVIEW-LOG.md|harden/*|docs/log.md|docs/audit/SCOREBOARD.md|docs/audit/history.jsonl) ;; *) PR_LOG_ONLY=false ;; esac
+          done
+          if [ -n "$PR_FILES" ] && [ "$PR_LOG_ONLY" = true ]; then echo "log-only PR: no code to judge"; exit 0; fi
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          ONLY_LOG=true
+          for f in $CHANGED; do
+            case "$f" in PLAN-REVIEW-LOG.md|harden/*|docs/log.md|docs/audit/SCOREBOARD.md|docs/audit/history.jsonl) ;; *) ONLY_LOG=false ;; esac
+          done
+          last_entry_for() {
+            awk -v sha="$1" 'BEGIN{RS="\n---\n"} /## HARDEN / && index($0, sha) {e=$0} END{print e}' PLAN-REVIEW-LOG.md
+          }
+          ENTRY=$(last_entry_for "$SHORT_HEAD")
+          if [ -z "$ENTRY" ] && [ "$ONLY_LOG" = true ]; then ENTRY=$(last_entry_for "$SHORT_PARENT"); fi
+          if [ -z "$ENTRY" ]; then echo "No harden entry for $SHORT_HEAD: run /harden on this commit"; exit 1; fi
+          echo "$ENTRY" | grep -q "VERDICT: SHIP" || { echo "Latest harden verdict is not SHIP"; echo "$ENTRY" | head -5; exit 1; }
+          RUN_ID=$(echo "$ENTRY" | sed -n 's/^## HARDEN \([^ ]*\) .*/\1/p' | head -1)
+          test -f "harden/$RUN_ID/verdict.json" && grep -q '"SHIP"' "harden/$RUN_ID/verdict.json" && test -f "harden/$RUN_ID/inspector-result.json" \
+            || { echo "SHIP entry $RUN_ID lacks harden/$RUN_ID/verdict.json or inspector-result.json"; exit 1; }
+          echo "harden: SHIP for this commit"

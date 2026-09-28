@@ -1,0 +1,20 @@
+{
+  "name": "product-studio",
+  "version": "0.8.1",
+  "description": "Commands for no-coders building on Vercel + Supabase + GitHub: /start-project (product, tech, toolchain, design, handoff), /askmatt (router over the whole toolbox), /build-ticket (worktree, approved plan, test-first, PR), /harden (independent verdict), /ship (go-live and release), plus /grill-design, /audit-loop and ui-sources (shadcn, Motion, Kokonut UI, Bklit, 21st.dev). Bundles Matt Pocock, Superpowers, Addy Osmani, Anthropic agents, Supabase/Vercel/shadcn skills, impeccable and Playwright.",
+  "author": {
+    "name": "Phillip Pasqualato"
+  },
+  "license": "MIT",
+  "keywords": [
+    "start-project",
+    "askmatt",
+    "grilling",
+    "design",
+    "vercel",
+    "supabase",
+    "github",
+    "no-code",
+    "visual-qa"
+  ]
+}
